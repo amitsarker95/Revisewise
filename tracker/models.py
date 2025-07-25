@@ -54,6 +54,20 @@ class Topic(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+    
+
+class RevisionLog(models.Model):
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="revision_log")
+    revised_at = models.DateField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-revised_at"]
+        verbose_name = 'Revision Log'
+        verbose_name_plural = "Revision Logs"
+
+    def __str__(self):
+        return f"From Subject : {self.topic.subject.name} Topic {self.topic.title} - {self.revised_at}"
 
 
 

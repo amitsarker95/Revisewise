@@ -1,0 +1,121 @@
+from rest_framework import serializers
+from datetime import timedelta
+from django.utils import timezone
+from .models import Categories,Topic, Subjects, RevisionLog
+
+
+class CreateCategoriesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Categories
+        fields = ['id','name', 'description', 'is_global']
+
+
+
+class DetailedCategoriesSerializer(serializers.ModelSerializer):
+
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Categories
+        fields = ['id','user', 'name', 'description', 'created_at', 'is_global']
+
+
+class CreateSubjectsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subjects
+        fields = ['id', 'name', 'description']
+
+class DetailedSubjectsSerializer(serializers.ModelSerializer):
+
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Subjects
+        fields = ['id', 'user', 'name', 'description', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
+
+class CreateTopicSerializer(serializers.ModelSerializers):
+
+    subject = serializers.StringRelatedField()
+    class Meta:
+        model = Topic
+        fields = ['id', 'name', 'description', 'subject']
+        
+
+
+class DetailedTopicSerializer(serializers.ModelSerializer):
+
+    user = serializers.StringRelatedField()
+    subject = serializers.StringRelatedField()
+
+    class Meta:
+        model = Topic
+        fields = [
+            'id', 'user', 'name', 'description', 
+            'subject', 'total_revisions', 'last_revised',
+            'deadline', 'created_at', 'is_completed',
+            
+            ]
+        read_only_fields = ['id', 'created_at', 'total_revisions', 'last_revised']
+
+class TopicUpdateSerializer(serializers.ModelSerializer):
+
+    deadline_status = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Topic
+        fields = ['id','is_completed', 'deadline_status']
+
+    def get_deadline_status(self, obj):
+        if obj.deadline and obj.deadline < timezone.now().date():
+            return "Overdue"
+        elif obj.deadline and obj.deadline > timezone.now():
+            return "Upcoming"
+        else:
+            return "No Deadline"
+
+    def update(self, instance, validated_data):
+        is_completed_now = validated_data.get('is_completed', instance.is_completed)
+        
+        if is_completed_now and not instance.is_completed:
+            instance.total_revisions += 1
+            instance.last_revised = timezone.now()
+
+        instance.is_completed = is_completed_now
+        instance.save()
+        return instance
+    
+
+class CreateRevisionLogSerializer(serializers.ModelSerializers):
+    class Meta:
+        model = RevisionLog
+        fields = ['id', 'topic', 'revised_at']
+
+    def create(self, validated_data):
+        revision = RevisionLog.objects.create(**validated_data)
+        topic = revision.topic
+        topic.total_revisions += 1
+        topic.last_revised = revision.revised_at
+        topic.save()
+        return revision
+        
+
+class DetailedRevisionLogSerializer(serializers.ModelSerializer):
+    topic = serializers.StringRelatedField(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)
+    subject = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = RevisionLog
+        fields = ['id', 'user', 'subject','notes', 'topic', 'revised_at']
+        read_only_fields = ['id', 'user', 'subject', 'topic', 'revised_at']
+
+
+    def get_user(self, obj):
+        return str(obj.topic.subject.user.full_name)
+    
+    def get_subject(self, obj):
+        return str(obj.topic.subject.name)
