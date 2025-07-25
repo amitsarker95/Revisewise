@@ -1,3 +1,60 @@
 from django.db import models
+from django.conf import settings
+from django.utils import timezone
 
-# Create your models here.
+
+class Categories(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name="categories")
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_global = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Categories"
+        unique_together = ("user", "name")
+
+    def __str__(self):
+        return f"{self.name} {'(Global)' if self.is_global else f'{self.user.full_name}'}"
+    
+
+
+class Subjects(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subjects")
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = 'Subject'
+        verbose_name_plural = "Subjects"
+        unique_together = ("user", "name")
+
+    def __str__(self):
+        return f"{self.name} created by ({self.user.full_name})"
+    
+
+    
+class Topic(models.Model):
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name="topics")
+    title = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateField(auto_now_add=True)
+    total_revisions = models.PositiveIntegerField(default=0)
+    last_revised = models.DateField(null=True, blank=True)
+    deadline = models.DateField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = 'Topic'
+        unique_together = ("subject", "title")
+
+    def __str__(self):
+        return f"{self.title}"
+
+
+
+
