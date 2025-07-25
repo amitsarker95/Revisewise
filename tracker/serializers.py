@@ -8,7 +8,7 @@ class CreateCategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Categories
-        fields = ['id','name', 'description', 'is_global']
+        fields = ['id','user','name', 'description', 'is_global']
 
 
 
@@ -37,7 +37,7 @@ class DetailedSubjectsSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'created_at']
 
 
-class CreateTopicSerializer(serializers.ModelSerializers):
+class CreateTopicSerializer(serializers.ModelSerializer):
 
     subject = serializers.StringRelatedField()
     class Meta:
@@ -89,7 +89,7 @@ class TopicUpdateSerializer(serializers.ModelSerializer):
         return instance
     
 
-class CreateRevisionLogSerializer(serializers.ModelSerializers):
+class CreateRevisionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = RevisionLog
         fields = ['id', 'topic', 'revised_at']
