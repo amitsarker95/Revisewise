@@ -23,9 +23,10 @@ class DetailedCategoriesSerializer(serializers.ModelSerializer):
 
 class CreateSubjectsSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    
     class Meta:
         model = Subjects
-        fields = ['id','user', 'name', 'description']
+        fields = ['id', 'categories','user', 'name', 'description']
 
     def validate_name(self, value):
         user = self.context['request'].user
@@ -36,10 +37,11 @@ class CreateSubjectsSerializer(serializers.ModelSerializer):
 class DetailedSubjectsSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField(read_only=True)
-
+    categories = DetailedCategoriesSerializer(read_only=True)
+    
     class Meta:
         model = Subjects
-        fields = ['id', 'user', 'name', 'description', 'created_at']
+        fields = ['id','categories', 'user', 'name', 'description', 'created_at']
 
 
 class CreateTopicSerializer(serializers.ModelSerializer):
