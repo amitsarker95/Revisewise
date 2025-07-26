@@ -11,7 +11,7 @@ from .serializers import CreateCategoriesSerializer, DetailedCategoriesSerialize
 from .service import RevisionAppService
 
 
-class CategoriesCreateView(APIView):
+class CategoriesCreateAPIView(APIView):
     service = RevisionAppService()
     serializer_class = CreateCategoriesSerializer
     detail_serializer_class = DetailedCategoriesSerializer
@@ -27,7 +27,7 @@ class CategoriesCreateView(APIView):
         category = self.service.create_category(**serializer.validated_data)
         return Response(self.detail_serializer_class(category).data, status=status.HTTP_201_CREATED)
 
-class CategoriesRetrieveUpdateDeleteView(APIView):
+class CategoriesRetrieveUpdateDeleteAPIView(APIView):
     service = RevisionAppService()
     serializer_class = CreateCategoriesSerializer
     detail_serializer_class = DetailedCategoriesSerializer
@@ -64,5 +64,28 @@ class CategoriesRetrieveUpdateDeleteView(APIView):
     def delete(self, request, category_id):
         self.service.delete_category(category_id=category_id)
         return Response("Category deleted successfully",status=status.HTTP_204_NO_CONTENT)
+    
+
+
+class SubjectsCreateAPIView(APIView):
+    service = RevisionAppService()
+    serializer_class = CreateSubjectsSerializer
+    detail_serializer_class = DetailedSubjectsSerializer
+
+    def get(self, request):
+        subjects = self.service.get_all_subjects(request.user)
+        serializer = self.serializer_class(subjects, many=True)
+        return Response(self.detail_serializer_class(subjects, many=True).data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        if request.user.is_authenticated:
+            validated_data['user'] = request.user
+        else:
+            return Response("Authentication required", status=status.HTTP_401_UNAUTHORIZED)
+        subject = self.service.create_subject(**validated_data)
+        return Response(self.detail_serializer_class(subject).data, status=status.HTTP_201_CREATED)
 
         

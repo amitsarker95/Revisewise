@@ -22,19 +22,18 @@ class DetailedCategoriesSerializer(serializers.ModelSerializer):
 
 
 class CreateSubjectsSerializer(serializers.ModelSerializer):
-
+    user = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Subjects
-        fields = ['id', 'name', 'description']
+        fields = ['id','user', 'name', 'description']
 
 class DetailedSubjectsSerializer(serializers.ModelSerializer):
 
-    user = serializers.StringRelatedField()
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Subjects
         fields = ['id', 'user', 'name', 'description', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
 
 
 class CreateTopicSerializer(serializers.ModelSerializer):

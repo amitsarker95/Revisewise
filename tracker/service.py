@@ -4,7 +4,11 @@ from django.db.models import Q
 
 
 class RevisionAppService:
+    
+    '''
+    Category Services
 
+    '''
     def get_all_categories(self, user):
         if user.is_authenticated:
             return Categories.objects.filter(Q(user=user) | Q(is_global=True))
@@ -34,4 +38,24 @@ class RevisionAppService:
             return f"{category.name} has been successfully deleted."
         except:
             raise Exception("Category not found")
+        
+    '''
+    Subject Services
+    
+    '''
+
+    def get_all_subjects(self, user):
+        if user.is_authenticated:
+            return Subjects.objects.filter(user=user)
+        else:
+            return Subjects.objects.none()
+        
+    def get_subject_by_id(self, subject_id):
+        subject = Subjects.objects.get(id=subject_id)
+        return subject
+    
+    def create_subject(self, **validated_data):
+        subject = Subjects.objects.create(**validated_data)
+        return subject
+        
    
