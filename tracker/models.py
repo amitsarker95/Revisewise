@@ -40,7 +40,7 @@ class Subjects(models.Model):
     
 class Topic(models.Model):
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name="topics")
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateField(auto_now_add=True)
     total_revisions = models.PositiveIntegerField(default=0)

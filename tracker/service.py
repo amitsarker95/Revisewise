@@ -81,4 +81,42 @@ class RevisionAppService:
         except:
             raise Exception("Subject not found")
         
+
+    '''
+    Subject Services
+    
+    '''
+
+    def get_all_topics(self, user):
+        if user.is_authenticated:
+            return Topic.objects.filter(user=user)
+        else:
+            return Topic.objects.none()
+        
+    def get_topic_by_id_and_check_owner(self, id, user):
+        try:
+            topic = Topic.objects.get(id=id)
+            if topic.subject.user != user:
+                raise PermissionDenied("You are not allowed to access this topic")
+            return topic
+        except Topic.DoesNotExist:
+            raise NotFound("Topic not found")
    
+    def create_topic(self, **validated_data):
+        topic = Topic.objects.create(**validated_data)
+        return topic
+    
+    def update_topic(self, topic_id, **validated_data):
+        topic = Topic.objects.get(id=topic_id)
+        for key, value in validated_data.items():
+            setattr(topic, key, value)
+        topic.save()
+        return topic
+    
+    def delete_topic(self, topic_id):
+        try:
+            topic = Topic.objects.get(id=topic_id)
+            topic.delete()
+            return f"{topic.name} has been successfully deleted."
+        except:
+            raise Exception("Topic not found")

@@ -124,3 +124,13 @@ class SubjectsRetrieveUpdateDeleteAPIView(APIView):
                 return Response("Subject deleted successfully",status=status.HTTP_204_NO_CONTENT)
         except:
             return Response("Subject not found", status=status.HTTP_404_NOT_FOUND)
+        
+
+class TopicsCreateAPIView(APIView):
+    service = RevisionAppService()
+    serializer_class = CreateTopicSerializer
+    detail_serializer_class = DetailedTopicSerializer
+
+    def get(self, request):
+        # topics = self.service.get_all_topics(request.user)
+        pass
