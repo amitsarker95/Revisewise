@@ -27,6 +27,12 @@ class CreateSubjectsSerializer(serializers.ModelSerializer):
         model = Subjects
         fields = ['id','user', 'name', 'description']
 
+    def validate_name(self, value):
+        user = self.context['request'].user
+        if Subjects.objects.filter(user=user, name=value).exists():
+            raise serializers.ValidationError("Subject with this name already exists")
+        return value
+
 class DetailedSubjectsSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField(read_only=True)

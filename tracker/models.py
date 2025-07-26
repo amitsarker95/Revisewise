@@ -22,7 +22,7 @@ class Categories(models.Model):
 
 class Subjects(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="subjects")
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateField(auto_now_add=True)
 
