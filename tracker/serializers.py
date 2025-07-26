@@ -33,35 +33,46 @@ class CreateSubjectsSerializer(serializers.ModelSerializer):
         if Subjects.objects.filter(user=user, name=value).exists():
             raise serializers.ValidationError("Subject with this name already exists")
         return value
+    
+    def validate(self, data):
+        subject_name = data.get('name')
+        category = data.get('categories')
+
+        if category.name.strip().lower() == subject_name.strip().lower():
+            raise serializers.ValidationError("Subject name cannot be the same as its category name")
+        return data
+
+class CreateTopicSerializer(serializers.ModelSerializer):
+
+    subject_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Topic
+        fields = ['id', 'title', 'description', 'subject_id']
 
 class DetailedSubjectsSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField(read_only=True)
-    categories = DetailedCategoriesSerializer(read_only=True)
-    
+    categories = serializers.StringRelatedField(read_only=True)
+    topics = CreateTopicSerializer(many=True, read_only=True)
+
     class Meta:
         model = Subjects
-        fields = ['id','categories', 'user', 'name', 'description', 'created_at']
+        fields = ['id','categories', 'user', 'name', 'description', 'created_at', 'topics']
 
 
-class CreateTopicSerializer(serializers.ModelSerializer):
 
-    subject = serializers.StringRelatedField()
-    class Meta:
-        model = Topic
-        fields = ['id', 'name', 'description', 'subject']
         
 
 
 class DetailedTopicSerializer(serializers.ModelSerializer):
 
-    user = serializers.StringRelatedField()
-    subject = serializers.StringRelatedField()
+    
 
     class Meta:
         model = Topic
         fields = [
-            'id', 'user', 'name', 'description', 
+            'id', 'title', 'description', 
             'subject', 'total_revisions', 'last_revised',
             'deadline', 'created_at', 'is_completed',
             

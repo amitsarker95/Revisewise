@@ -1,7 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound, PermissionDenied
 from django.db.models import Q
+from django.db import IntegrityError
+from rest_framework.exceptions import ValidationError
 from .models import Subjects, Categories, Topic, RevisionLog
+
 
 
 class RevisionAppService:
@@ -10,11 +13,8 @@ class RevisionAppService:
     Category Services
 
     '''
-    def get_all_categories(self, user):
-        if user.is_authenticated:
-            return Categories.objects.filter(Q(user=user) | Q(is_global=True))
-        else:
-            return Categories.objects.filter(is_global=True)
+    def get_all_categories(self):
+        return Categories.objects.all()
     
     def get_category_by_id(self, category_id):
         category = Categories.objects.get(id=category_id)
@@ -89,7 +89,7 @@ class RevisionAppService:
 
     def get_all_topics(self, user):
         if user.is_authenticated:
-            return Topic.objects.filter(user=user)
+            return Topic.objects.filter(subject__user=user)
         else:
             return Topic.objects.none()
         
@@ -103,8 +103,11 @@ class RevisionAppService:
             raise NotFound("Topic not found")
    
     def create_topic(self, **validated_data):
-        topic = Topic.objects.create(**validated_data)
-        return topic
+        try:
+            topic = Topic.objects.create(**validated_data)
+            return topic
+        except IntegrityError:
+            raise ValidationError({"title": ["Topic with this title already exists for this subject."]})
     
     def update_topic(self, topic_id, **validated_data):
         topic = Topic.objects.get(id=topic_id)

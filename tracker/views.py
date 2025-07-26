@@ -18,7 +18,7 @@ class CategoriesCreateAPIView(APIView):
     detail_serializer_class = DetailedCategoriesSerializer
 
     def get(self, request):
-        categories = self.service.get_all_categories(request.user)
+        categories = self.service.get_all_categories()
         serializer = self.detail_serializer_class(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -75,7 +75,6 @@ class SubjectsCreateAPIView(APIView):
 
     def get(self, request):
         subjects = self.service.get_all_subjects(request.user)
-        serializer = self.serializer_class(subjects, many=True)
         return Response(self.detail_serializer_class(subjects, many=True).data, status=status.HTTP_200_OK)
     
     def post(self, request):
@@ -132,5 +131,18 @@ class TopicsCreateAPIView(APIView):
     detail_serializer_class = DetailedTopicSerializer
 
     def get(self, request):
-        # topics = self.service.get_all_topics(request.user)
-        pass
+        topics = self.service.get_all_topics(request.user)
+        return Response(self.detail_serializer_class(topics, many=True).data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        try:
+            subject = self.service.get_subject_by_id_and_check_owner(id=validated_data.pop('subject_id'), user=request.user)
+        except:
+            return Response("Subject not found", status=status.HTTP_404_NOT_FOUND)
+        validated_data['subject'] = subject
+        topic = self.service.create_topic(**serializer.validated_data)
+
+        return Response(self.detail_serializer_class(topic).data, status=status.HTTP_201_CREATED)
