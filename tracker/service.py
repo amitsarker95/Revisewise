@@ -12,12 +12,20 @@ class RevisionAppService:
             return Categories.objects.filter(is_global=True)
     
     def get_category_by_id(self, category_id):
-        category = Categories.objects.filter(id=category_id)
+        category = Categories.objects.get(id=category_id)
         return category
     
     def create_category(self, **validated_data):
         category = Categories.objects.create(**validated_data)
         return category
+    
+    def upadate_category(self, category_id, **validated_data):
+        category = Categories.objects.get(id=category_id)
+        for key, value in validated_data.items():
+            setattr(category, key, value)
+        category.save()
+        return category
+
     
     def delete_category(self, category_id):
         try:

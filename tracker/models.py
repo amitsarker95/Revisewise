@@ -16,7 +16,7 @@ class Categories(models.Model):
         unique_together = ("user", "name")
 
     def __str__(self):
-        return f"{self.name} {'(Global)' if self.is_global else f'{self.user.full_name}'}"
+        return f"{self.name}"
     
 
 
