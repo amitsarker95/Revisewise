@@ -79,12 +79,20 @@ class DetailedTopicSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'total_revisions', 'last_revised']
 
 class TopicUpdateSerializer(serializers.ModelSerializer):
-
     deadline_status = serializers.SerializerMethodField(read_only=True)
+    subject_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Topic
-        fields = ['id','is_completed', 'deadline_status']
+        fields = [
+            'id',
+            'title',
+            'description',
+            'subject_id',
+            'deadline',
+            'is_completed',
+            'deadline_status'
+        ]
 
     def get_deadline_status(self, obj):
         if obj.deadline and obj.deadline < timezone.now().date():
@@ -94,7 +102,7 @@ class TopicUpdateSerializer(serializers.ModelSerializer):
         else:
             return "No Deadline"
 
-    
+
 
 class CreateRevisionLogSerializer(serializers.ModelSerializer):
     class Meta:

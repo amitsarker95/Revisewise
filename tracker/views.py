@@ -149,7 +149,7 @@ class TopicsCreateAPIView(APIView):
     
 class TopicsRetrieveUpdateDeleteAPIView(APIView):
     service = RevisionAppService()
-    serializer_class = CreateTopicSerializer
+    serializer_class = TopicUpdateSerializer
     detailed_serializer_class = DetailedTopicSerializer
 
     def get(self, request, *args, **kwargs):
@@ -160,6 +160,7 @@ class TopicsRetrieveUpdateDeleteAPIView(APIView):
     
     def put(self, request, *args, **kwargs):
         topic_id = kwargs.get('topic_id')
+        print('put' ,topic_id)
         try:
             topic = self.service.get_topic_by_id_and_check_owner(topic_id, request.user)
         except:
@@ -168,4 +169,14 @@ class TopicsRetrieveUpdateDeleteAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         update_topic = self.service.update_topic(topic.id, **serializer.validated_data)
         return Response(self.detailed_serializer_class(update_topic).data, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        topic_id = kwargs.get('topic_id')
+        try:
+            topic = self.service.get_topic_by_id_and_check_owner(topic_id, request.user)
+            print(topic)
+            self.service.delete_topic(topic.id)
+            return Response("Topic deleted successfully", status=status.HTTP_204_NO_CONTENT)
+        except:
+            return Response("Topic not found", status=status.HTTP_404_NOT_FOUND)
         
