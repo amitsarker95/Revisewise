@@ -3,6 +3,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from django.db.models import Q
 from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
+from datetime import datetime
 from .models import Subjects, Categories, Topic, RevisionLog
 
 
@@ -94,9 +95,11 @@ class RevisionAppService:
             return Topic.objects.none()
         
     def get_topic_by_id_and_check_owner(self, id, user):
+        print(user.id)
         try:
             topic = Topic.objects.get(id=id)
             if topic.subject.user != user:
+
                 raise PermissionDenied("You are not allowed to access this topic")
             return topic
         except Topic.DoesNotExist:
@@ -123,3 +126,15 @@ class RevisionAppService:
             return f"{topic.name} has been successfully deleted."
         except:
             raise Exception("Topic not found")
+        
+    def update_topic_status(self, topic_id, user, **validated_data):
+        topic = self.get_topic_by_id_and_check_owner(topic_id, user)
+        is_completed = validated_data.get('is_completed')
+        if is_completed:
+            topic.is_completed = is_completed
+            topic.total_revisions += 1
+            topic.last_revised = datetime.now()
+            topic.save()
+        return topic
+
+        

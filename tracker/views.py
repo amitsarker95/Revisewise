@@ -146,3 +146,26 @@ class TopicsCreateAPIView(APIView):
         topic = self.service.create_topic(**serializer.validated_data)
 
         return Response(self.detail_serializer_class(topic).data, status=status.HTTP_201_CREATED)
+    
+class TopicsRetrieveUpdateDeleteAPIView(APIView):
+    service = RevisionAppService()
+    serializer_class = CreateTopicSerializer
+    detailed_serializer_class = DetailedTopicSerializer
+
+    def get(self, request, *args, **kwargs):
+        topic_id = kwargs.get('topic_id')
+        topic = self.service.get_topic_by_id_and_check_owner(topic_id, request.user)
+        serializer = self.detailed_serializer_class(topic)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def put(self, request, *args, **kwargs):
+        topic_id = kwargs.get('topic_id')
+        try:
+            topic = self.service.get_topic_by_id_and_check_owner(topic_id, request.user)
+        except:
+            return Response("Topic not found", status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(topic, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        update_topic = self.service.update_topic(topic.id, **serializer.validated_data)
+        return Response(self.detailed_serializer_class(update_topic).data, status=status.HTTP_200_OK)
+        

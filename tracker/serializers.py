@@ -37,7 +37,6 @@ class CreateSubjectsSerializer(serializers.ModelSerializer):
     def validate(self, data):
         subject_name = data.get('name')
         category = data.get('categories')
-
         if category.name.strip().lower() == subject_name.strip().lower():
             raise serializers.ValidationError("Subject name cannot be the same as its category name")
         return data
@@ -53,7 +52,7 @@ class CreateTopicSerializer(serializers.ModelSerializer):
 class DetailedSubjectsSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField(read_only=True)
-    categories = serializers.StringRelatedField(read_only=True)
+    categories = DetailedCategoriesSerializer(read_only=True)
     topics = CreateTopicSerializer(many=True, read_only=True)
 
     class Meta:
@@ -95,16 +94,6 @@ class TopicUpdateSerializer(serializers.ModelSerializer):
         else:
             return "No Deadline"
 
-    def update(self, instance, validated_data):
-        is_completed_now = validated_data.get('is_completed', instance.is_completed)
-        
-        if is_completed_now and not instance.is_completed:
-            instance.total_revisions += 1
-            instance.last_revised = timezone.now()
-
-        instance.is_completed = is_completed_now
-        instance.save()
-        return instance
     
 
 class CreateRevisionLogSerializer(serializers.ModelSerializer):
@@ -122,7 +111,7 @@ class CreateRevisionLogSerializer(serializers.ModelSerializer):
         
 
 class DetailedRevisionLogSerializer(serializers.ModelSerializer):
-    topic = serializers.StringRelatedField(read_only=True)
+    topic = DetailedTopicSerializer(read_only=True)
     user = serializers.SerializerMethodField(read_only=True)
     subject = serializers.SerializerMethodField(read_only=True)
 
