@@ -7,3 +7,4 @@ from .models import *
 admin.site.register(Categories)
 admin.site.register(Subjects)
 admin.site.register(Topic)
+admin.site.register(RevisionLog)

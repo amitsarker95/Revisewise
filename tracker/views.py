@@ -10,6 +10,7 @@ from .serializers import CreateCategoriesSerializer, DetailedCategoriesSerialize
                         DetailedRevisionLogSerializer
 
 from .service import RevisionAppService
+from tracker.models import RevisionLog
 
 
 class CategoriesCreateAPIView(APIView):
@@ -160,7 +161,6 @@ class TopicsRetrieveUpdateDeleteAPIView(APIView):
     
     def put(self, request, *args, **kwargs):
         topic_id = kwargs.get('topic_id')
-        print('put' ,topic_id)
         try:
             topic = self.service.get_topic_by_id_and_check_owner(topic_id, request.user)
         except:
@@ -168,6 +168,7 @@ class TopicsRetrieveUpdateDeleteAPIView(APIView):
         serializer = self.serializer_class(topic, data=request.data)
         serializer.is_valid(raise_exception=True)
         update_topic = self.service.update_topic(topic.id, **serializer.validated_data)
+        self.service.revision_log_create(update_topic, topic.is_completed)
         return Response(self.detailed_serializer_class(update_topic).data, status=status.HTTP_200_OK)
 
     def delete(self, request, *args, **kwargs):
@@ -180,3 +181,53 @@ class TopicsRetrieveUpdateDeleteAPIView(APIView):
         except:
             return Response("Topic not found", status=status.HTTP_404_NOT_FOUND)
         
+
+class RevisionLogAPIView(APIView):
+    service = RevisionAppService()
+    serializer_class = CreateRevisionLogSerializer
+    detailed_serializer_class = DetailedRevisionLogSerializer
+
+    
+
+    def get(self, request):
+        logs = RevisionLog.objects.all()
+        print("Total logs:", logs.count())
+        print("Filtered logs:", self.service.get_all_revision_log(request.user).count())
+        revision_logs = self.service.get_all_revision_log(request.user)
+        serializer = self.detailed_serializer_class(revision_logs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RevisionLogRetriveUpdateDeleteAPIView(APIView):
+    
+    service = RevisionAppService()
+    serializer_class = CreateRevisionLogSerializer
+    detailed_serializer_class = DetailedRevisionLogSerializer
+
+    def get(self, request, *args, **kwargs):
+        log_id = kwargs.get('log_id')
+        try:
+            log = self.service.get_revision_log_by_id(log_id, request.user)
+            serializer = self.detailed_serializer_class(log)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response("Log not found", status=status.HTTP_404_NOT_FOUND)
+        
+    def put(self, request, *args, **kwargs):
+        log_id = kwargs.get('log_id')
+        try:
+            log = self.service.get_revision_log_by_id(log_id, request.user)
+        except:
+            return Response("Log not found", status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = self.serializer_class(log, data=request.data)
+        print(serializer.initial_data)
+        serializer.is_valid(raise_exception=True)
+        updated_log = self.service.update_revision_log(log.id, **serializer.validated_data)
+        return Response(self.detailed_serializer_class(updated_log).data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, *args, **kwargs):
+        log_id = kwargs.get('log_id')
+        self.service.delete_revision_log(log_id, request.user)
+        return Response("Log deleted successfully", status=status.HTTP_204_NO_CONTENT)
+    

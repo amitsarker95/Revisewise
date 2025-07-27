@@ -139,8 +139,49 @@ class RevisionAppService:
         if is_completed:
             topic.is_completed = is_completed
             topic.total_revisions += 1
-            topic.last_revised = datetime.now()
+            topic.last_revised = datetime.now().date()
             topic.save()
         return topic
 
+    '''
+    Revision Log Services
+    
+    '''
+
+    def revision_log_create(self, topic, was_completed):
+        if not was_completed and topic.is_completed:
+            revision = RevisionLog.objects.create(
+                topic=topic,
+                notes="Topic marked as completed",
+                revised_at= datetime.now().date()
+            )
+            topic.total_revisions
+
+
+    def get_all_revision_log(self, user):
+        if user.is_authenticated:
+            return RevisionLog.objects.filter(topic__subject__user=user)
+        else:
+            return RevisionLog.objects.none()
+        
+    def get_revision_log_by_id(self, log_id, user):
+        log = RevisionLog.objects.get(id=log_id)
+        if log.topic.subject.user != user :
+            raise PermissionDenied("You are not allowed to access this log")
+        return RevisionLog.objects.get(id=log_id)
+
+    def get_revision_log_by_topic(self, topic_id):
+        return RevisionLog.objects.filter(topic=topic_id)
+        
+
+    def update_revision_log(self, log_id, **validated_data):
+        log = RevisionLog.objects.get(id=log_id)
+        for key, value in validated_data.items():
+            setattr(log, key, value)
+        log.save()
+        return log
+    
+    def delete_revision_log(self, log_id, user):
+        log = self.get_revision_log_by_id(log_id, user)
+        log.delete()
         

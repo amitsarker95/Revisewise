@@ -107,18 +107,16 @@ class TopicUpdateSerializer(serializers.ModelSerializer):
 class CreateRevisionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = RevisionLog
-        fields = ['id', 'topic', 'revised_at']
+        fields = "__all__"
 
-    def create(self, validated_data):
-        revision = RevisionLog.objects.create(**validated_data)
-        topic = revision.topic
-        topic.total_revisions += 1
-        topic.last_revised = revision.revised_at
-        topic.save()
-        return revision
+    # def validate(self, data):
+    #     if data.get('topic').is_completed:
+    #         raise serializers.ValidationError("Topic is already completed")
+    #     return data
         
 
 class DetailedRevisionLogSerializer(serializers.ModelSerializer):
+
     topic = DetailedTopicSerializer(read_only=True)
     user = serializers.SerializerMethodField(read_only=True)
     subject = serializers.SerializerMethodField(read_only=True)
